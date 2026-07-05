@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบพิมพ์ใบปะหน้าพัสดุสำหรับงานส่งคืนเครื่องซ่อม - Premium Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Prompt for Thai & Inter for English/Numbers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- JsBarcode CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Typography overrides */
+        body {
+            font-family: 'Prompt', 'Inter', sans-serif;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        .input-premium {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .input-premium:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+            outline: none;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        /* Simulator sticker visuals */
+        .preview-box {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background-color: #ffffff;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            transition: width 0.3s ease, height 0.3s ease;
+            overflow: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* CSS สำหรับการพิมพ์โดยเฉพาะ (Print Layout) */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            body * {
+                visibility: hidden;
+            }
+
+            #printArea,
+            #printArea * {
+                visibility: visible;
+                color: #000000 !important;
+            }
+
+            main {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            main > div {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            #printContainer {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
+            }
+
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none !important;
+                border: none !important;
+                background: white !important;
+            }
+
+            /* Adjust borders for print clarity */
+            .print-border-black {
+                border-color: #000000 !important;
+            }
+            .print-bg-black {
+                background-color: #000000 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.2),rgba(255,255,255,0))]">
+
+    <!-- Header (No Print) -->
+    <header class="bg-slate-900/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-40 p-4 no-print shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <h1 class="text-xl font-bold flex items-center gap-3 tracking-wide">
+                <span class="p-1.5 bg-gradient-to-tr from-sky-400 to-indigo-600 rounded-lg text-white">
+                    <i data-lucide="printer" class="w-5 h-5"></i>
+                </span>
+                <span>ระบบพิมพ์ใบปะหน้าส่งคืนเครื่องซ่อม <span class="text-xs text-sky-400 bg-sky-950/80 px-2.5 py-0.5 rounded-full border border-sky-800/50 font-mono ml-2">PRO v2.0</span></span>
+            </h1>
+            
+            <div class="flex items-center gap-4 text-sm text-slate-400">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>เชื่อมต่อสำเร็จ</span>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <span id="currentTime" class="font-mono text-slate-300">12:00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- ฝั่งซ้าย: Form กรอกข้อมูล -->
+        <div class="lg:col-span-6 flex flex-col gap-6 no-print">
+            
+            <!-- Smart Paste (วางที่อยู่อัจฉริยะ) -->
+            <div class="glass-panel p-5 rounded-2xl shadow-xl relative overflow-hidden group">
+                <div class="absolute -right-16 -top-16 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all duration-500"></div>
+                
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-md font-semibold text-sky-400 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>ช่องวางที่อยู่อัจฉริยะ (Smart Paste)</span>
+                    </h2>
+                    <button type="button" onclick="clearSmartPaste()" class="text-xs text-slate-400 hover:text-rose-400 flex items-center gap-1 transition">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> ล้างข้อมูล
+                    </button>
+                </div>
+                <textarea id="smartPasteInput" rows="3" oninput="handleSmartPaste()"
+                    class="w-full text-sm p-3 input-premium rounded-xl resize-none placeholder-slate-500"
+                    placeholder="วางข้อความที่อยู่อิสระที่นี่ เช่น: 'สมชาย ดีใจ 0812345678 123/4 ม.5 ต.ในเมือง อ.เมือง จ.เชียงใหม่ 50000' ระบบจะกรอกฟิลด์ให้อัตโนมัติ..."></textarea>
+                <div class="mt-2 text-xs text-slate-400 flex items-center gap-2.5">
+                    <span class="inline-flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> แยกเบอร์โทร</span>
+                    <span class="inline-flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> แยกรหัสไปรษณีย์</span>
+                    <span class="inline-flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> แยกชื่อ-ที่อยู่</span>
+                </div>
+            </div>
+
+            <!-- ข้อมูลหลักพัสดุ -->
+            <div class="glass-panel p-6 rounded-2xl shadow-xl flex flex-col gap-5">
+                
+                <!-- ข้อมูลผู้ส่ง (พร้อม Profile Management) -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="user-check" class="w-4.5 h-4.5 text-sky-400"></i>
+                            <span>ข้อมูลผู้ส่ง (ร้านค้า / บริษัท)</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <select id="senderProfileSelect" onchange="onSenderProfileChange()" 
+                                class="text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 focus:outline-none focus:border-sky-500">
+                                <!-- Loaded by JS -->
+                            </select>
+                            <button type="button" onclick="openProfileModal()" 
+                                class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium bg-sky-950/50 border border-sky-800/40 px-2 py-1 rounded-lg">
+                                <i data-lucide="settings" class="w-3 h-3"></i> จัดการโปรไฟล์
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="inputSender" rows="3" oninput="updatePreview()"
+                        class="w-full text-sm p-3 input-premium rounded-xl placeholder-slate-600"
+                        placeholder="ชื่อร้าน/บริษัท, ที่อยู่, เบอร์โทรศัพท์..."></textarea>
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button type="button" onclick="saveCurrentSenderAsProfile()"
+                            class="text-xs text-slate-400 hover:text-sky-400 flex items-center gap-1 transition">
+                            <i data-lucide="save" class="w-3 h-3"></i> บันทึกค่าผู้ส่งปัจจุบันนี้
+                        </button>
+                    </div>
+                </div>
+
+                <div class="h-px bg-slate-800"></div>
+
+                <!-- ข้อมูลผู้รับ -->
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                        <i data-lucide="user-plus" class="w-4.5 h-4.5 text-indigo-400"></i>
+                        <span>ข้อมูลผู้รับจัดส่ง</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">ชื่อ-นามสกุล ผู้รับ</label>
+                            <input type="text" id="inputRecName" oninput="updatePreview()"
+                                class="w-full text-sm p-3 input-premium rounded-xl placeholder-slate-600"
+                                placeholder="ชื่อลูกค้า">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">เบอร์โทรศัพท์</label>
+                            <input type="text" id="inputRecPhone" oninput="updatePreview()"
+                                class="w-full text-sm p-3 input-premium rounded-xl placeholder-slate-600"
+                                placeholder="08x-xxx-xxxx">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">ที่อยู่ผู้รับ</label>
+                        <textarea id="inputRecAddress" rows="3" oninput="updatePreview()"
+                            class="w-full text-sm p-3 input-premium rounded-xl placeholder-slate-600"
+                            placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">รหัสไปรษณีย์</label>
+                            <input type="text" id="inputRecZip" oninput="updatePreview()" maxlength="5"
+                                class="w-full text-md font-bold tracking-widest p-2.5 input-premium rounded-xl font-mono text-center text-sky-300 placeholder-slate-600"
+                                placeholder="10220">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">หมายเหตุ (เช่น เลขซ่อม/อาการ)</label>
+                            <input type="text" id="inputNote" oninput="updatePreview()"
+                                class="w-full text-sm p-3 input-premium rounded-xl placeholder-slate-600"
+                                placeholder="เช่น เคลมบอร์ด RE6901">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ปรับแต่งใบปะหน้า & บาร์โค้ด -->
+            <div class="glass-panel p-6 rounded-2xl shadow-xl">
+                <h2 class="text-md font-semibold text-slate-200 mb-4 flex items-center gap-2 border-b border-slate-800 pb-2">
+                    <i data-lucide="sliders" class="w-4.5 h-4.5 text-indigo-400"></i>
+                    <span>ตั้งค่าใบปะหน้า & บาร์โค้ด</span>
+                </h2>
+
+                <div class="flex flex-col gap-4">
+                    <!-- ประเภทเครื่องพิมพ์และการจัดวาง -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <i data-lucide="printer" class="w-3.5 h-3.5 text-sky-400"></i>
+                            <span>เครื่องพิมพ์และรูปแบบการจัดวาง (Print Layout)</span>
+                        </label>
+                        <select id="printMethod" onchange="onPrintMethodChange()"
+                            class="w-full text-xs bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-sky-500">
+                            <option value="thermal">เครื่องพิมพ์สติกเกอร์ความร้อน (Thermal - พอดีกระดาษ)</option>
+                            <option value="a4-topleft">เครื่องพิมพ์ทั่วไป A4 / A5 (ชิดมุมบนซ้าย - ประหยัดกระดาษ)</option>
+                            <option value="a4-center">เครื่องพิมพ์ทั่วไป A4 / A5 (จัดกึ่งกลางหน้า - ตัดสะดวก)</option>
+                        </select>
+                    </div>
+
+                    <!-- การแนะนำขนาดและมิติกระดาษ -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5 text-sky-400"></i>
+                                <span>ขนาดกระดาษแนะนำ (Preset)</span>
+                            </label>
+                            <select id="paperPreset" onchange="onPaperPresetChange()"
+                                class="w-full text-xs bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-sky-500">
+                                <option value="a6">A6 (100 x 150 mm) - สติกเกอร์ทั่วไป</option>
+                                <option value="a4-quarter">1/4 A4 (105 x 148 mm)</option>
+                                <option value="a5">A5 (148 x 210 mm) - ครึ่งแผ่น A4</option>
+                                <option value="a7">A7 (74 x 105 mm) - ขนาดเล็ก</option>
+                                <option value="square100">สี่เหลี่ยมจัตุรัส (100 x 100 mm)</option>
+                                <option value="custom">กำหนดขนาดเอง (Custom Size)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="package" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                <span>แนะนำตามกล่องพัสดุ (Box Presets)</span>
+                            </label>
+                            <select id="boxPreset" onchange="onBoxPresetChange()"
+                                class="w-full text-xs bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-sky-500">
+                                <option value="">-- แนะนำขนาดตามกล่องพัสดุ --</option>
+                                <option value="box-00">กล่อง 00 (ซอง/จิ๋ว) - ขนาดแนะ 75 x 50 mm</option>
+                                <option value="box-0">กล่อง 0 (11x17 cm) - ขนาดแนะ 100 x 80 mm</option>
+                                <option value="box-a">กล่อง A (14x20 cm) - ขนาดแนะ A6 (100x150 mm)</option>
+                                <option value="box-b">กล่อง B (17x25 cm) - ขนาดแนะ A6 หรือ 1/4 A4</option>
+                                <option value="box-c">กล่อง C (20x30 cm) - ขนาดแนะ 1/4 A4 หรือ A5</option>
+                                <option value="box-d">กล่อง D (22x35 cm) - ขนาดแนะ A5 (148x210 mm)</option>
+                                <option value="box-e">กล่อง E (24x40 cm) - ขนาดแนะ A5 (148x210 mm)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ขนาดกว้าง x ยาว มม. (Custom Dimension Inputs) -->
+                    <div id="customDimensionContainer" class="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl flex flex-col gap-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-300">ระบุขนาดใบปะหน้า (มิลลิเมตร)</span>
+                            <span id="dimensionLabel" class="text-[10px] text-sky-400 font-mono">100 x 150 mm</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">ความกว้าง (Width - mm)</label>
+                                <input type="number" id="labelWidth" min="40" max="210" value="100" oninput="onCustomDimensionsInput()"
+                                    class="w-full text-xs p-2 input-premium rounded-lg text-center font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">ความสูง (Height - mm)</label>
+                                <input type="number" id="labelHeight" min="40" max="297" value="150" oninput="onCustomDimensionsInput()"
+                                    class="w-full text-xs p-2 input-premium rounded-lg text-center font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-slate-800"></div>
+
+                    <!-- การปรับแต่ง Layout (Padding & Scale) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- ระยะขอบ -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-400 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3 text-slate-400"></i> ระยะขอบ (Padding):</span>
+                                <span id="lblPaddingVal" class="text-sky-400 font-mono">16px</span>
+                            </div>
+                            <input type="range" id="sliderPadding" min="0" max="40" value="16" oninput="changePadding(this.value)"
+                                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                        </div>
+                        <!-- ย่อขยายเนื้อหาทั้งหมด (Scale) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-400 flex items-center gap-1"><i data-lucide="maximize" class="w-3 h-3 text-slate-400"></i> สเกลเนื้อหา (Scale):</span>
+                                <span id="lblScaleVal" class="text-indigo-400 font-mono">100%</span>
+                            </div>
+                            <input type="range" id="sliderScale" min="50" max="150" value="100" oninput="changeScale(this.value)"
+                                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-slate-800"></div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-1">
+                        <!-- บาร์โค้ดเเละขอบตัด -->
+                        <div class="flex flex-col gap-2.5">
+                            <label class="block text-xs font-medium text-slate-400">ตัวช่วยขอบเขตและการแสดงผล</label>
+                            
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2.5 bg-slate-900/60 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                                    <input type="checkbox" id="chkShowBarcode" checked onchange="updatePreview()"
+                                        class="w-4 h-4 rounded text-sky-500 bg-slate-950 border-slate-700 focus:ring-0">
+                                    <span class="text-xs font-medium text-slate-300">เปิดบาร์โค้ด</span>
+                                </label>
+                                
+                                <label class="flex items-center gap-2.5 bg-slate-900/60 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                                    <input type="checkbox" id="chkShowCutLine" onchange="updatePreview()"
+                                        class="w-4 h-4 rounded text-sky-500 bg-slate-950 border-slate-700 focus:ring-0">
+                                    <span class="text-xs font-medium text-slate-300">แสดงเส้นประสำหรับตัด (Cutting Guide)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- แหล่งข้อมูลบาร์โค้ด & ตัวควบคุมปรับฟอนต์เดิม -->
+                        <div class="flex flex-col gap-3">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="block text-xs font-medium text-slate-400">บาร์โค้ดแปลงจาก</label>
+                                <select id="barcodeSource" onchange="updatePreview()"
+                                    class="w-full text-xs bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-sky-500">
+                                    <option value="zip">แปลงจาก รหัสไปรษณีย์</option>
+                                    <option value="note">แปลงจาก หมายเหตุ (ตัดเฉพาะอังกฤษ/ตัวเลข)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ปรับขนาดฟอนต์ -->
+                    <div class="bg-slate-900/20 p-3 rounded-xl border border-slate-800/60">
+                        <label class="block text-xs font-medium text-slate-400 mb-2.5">ขนาดตัวอักษรของข้อมูลหลัก</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-400">ข้อมูลผู้ส่ง:</span>
+                                    <span id="lblSenderFontSizeVal" class="text-sky-400 font-mono">11px</span>
+                                </div>
+                                <input type="range" id="sliderSenderFontSize" min="8" max="18" value="11" oninput="changeSenderFontSize(this.value)"
+                                    class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-400">ข้อมูลผู้รับ:</span>
+                                    <span id="lblRecFontSizeVal" class="text-indigo-400 font-mono">16px</span>
+                                </div>
+                                <input type="range" id="sliderRecFontSize" min="10" max="28" value="16" oninput="changeRecFontSize(this.value)"
+                                    class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ฝั่งขวา: Live Preview จำลองการพิมพ์ & ประวัติล่าสุด -->
+        <div class="lg:col-span-6 flex flex-col items-center gap-6">
+            
+            <!-- ปุ่มพิมพ์ (ขนาดเด่นสุด ๆ) -->
+            <button onclick="printLabel()"
+                class="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-2xl shadow-xl hover:shadow-indigo-500/20 active:scale-[0.98] transition-all flex justify-center items-center gap-3 text-lg group no-print">
+                <i data-lucide="printer" class="w-6 h-6 group-hover:animate-bounce"></i>
+                <span>สั่งพิมพ์ใบปะหน้าพัสดุ</span>
+            </button>
+
+            <div class="w-full flex flex-col items-center">
+                <p class="text-xs font-semibold text-slate-400 mb-2 self-start flex items-center gap-2 no-print">
+                    <i data-lucide="eye" class="w-4 h-4 text-sky-400"></i>
+                    <span>ตัวอย่างหน้าพิมพ์จำลอง (Live Print Preview):</span>
+                </p>
+
+                <!-- กล่องจำลองใบปะหน้า (Sticker Box Mockup) -->
+                <div id="printContainer" class="transition-all duration-300 preview-box p-4">
+                    
+                    <div id="printArea" class="h-full flex flex-col justify-between text-black bg-white select-none relative font-sans leading-tight">
+                        
+                        <!-- เส้นปะพรีวิว (แสดงเฉพาะในเบราว์เซอร์สำหรับความสวยงาม ไม่พิมพ์ออกมา) -->
+                        <div class="absolute inset-x-0 top-0 h-px bg-slate-200 border-t border-dashed no-print"></div>
+
+                        <!-- ส่วนหัว: ผู้ส่ง -->
+                        <div class="border-b-[1.5px] border-black pb-2 text-[11px] leading-tight print-border-black flex flex-col">
+                            <div class="flex items-center mb-1">
+                                <span class="font-extrabold bg-black text-white px-1.5 py-0.5 rounded-[3px] text-[9px] uppercase tracking-wider print-bg-black mr-1.5">ผู้ส่ง Sender</span>
+                            </div>
+                            <div id="viewSender" class="whitespace-pre-line mt-0.5 font-semibold text-slate-700 leading-normal" style="font-size: 11px;">
+                                กรุณากรอกข้อมูลผู้ส่ง
+                            </div>
+                        </div>
+
+                        <!-- ส่วนกลาง: ผู้รับ -->
+                        <div class="my-auto py-2 flex flex-col justify-center">
+                            <div class="mb-2">
+                                <span class="font-extrabold bg-black text-white px-2 py-0.5 rounded-[3px] text-[10px] uppercase tracking-wider print-bg-black inline-block">ผู้รับ Receiver</span>
+                            </div>
+                            <div class="pl-1">
+                                <div class="text-lg font-black tracking-wide" id="viewRecName" style="font-size: 18px;">ชื่อ-นามสกุลผู้รับ</div>
+                                <div class="text-md font-bold mt-0.5 tracking-wider font-mono text-slate-900" id="viewRecPhone" style="font-size: 16px;">เบอร์โทรศัพท์</div>
+                                <div class="leading-relaxed mt-1 whitespace-pre-line font-semibold text-slate-800" id="viewRecAddress" style="font-size: 14px;">
+                                    ที่อยู่จัดส่งสินค้า...
+                                </div>
+
+                                <!-- รหัสไปรษณีย์ ตัวหนาใหญ่มาก -->
+                                <div class="mt-4 flex items-center gap-2.5">
+                                    <span class="text-xs font-bold text-slate-600">POSTCODE:</span>
+                                    <span class="text-2xl font-black tracking-[0.2em] border-[2px] border-black px-4 py-0.5 bg-slate-50 font-mono rounded-[4px] print-border-black" id="viewRecZip">
+                                        XXXXX
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- บาร์โค้ดแสดงความมืออาชีพ -->
+                        <div id="barcodeContainer" class="flex flex-col items-center justify-center border-t border-slate-100 pt-1 no-print">
+                            <svg id="barcodeCanvas" class="max-w-full"></svg>
+                        </div>
+
+                        <!-- ส่วนท้าย: หมายเหตุ -->
+                        <div class="border-t-[1.5px] border-dashed border-slate-400 pt-2 flex justify-between items-end text-[10px] text-slate-500 font-semibold print-border-black">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-extrabold text-black">หมายเหตุ:</span>
+                                <span id="viewNote" class="text-slate-800 font-bold">-</span>
+                            </div>
+                            <div class="text-right text-[8px] text-slate-400 font-mono tracking-wider">
+                                RLS v2.0
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ประวัติการพิมพ์ล่าสุด -->
+            <div class="glass-panel p-5 rounded-2xl shadow-xl w-full no-print">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 text-sky-400"></i>
+                        <span>ประวัติการพิมพ์ล่าสุด (พิมพ์ซ้ำด่วน)</span>
+                    </h3>
+                    <button onclick="clearHistory()" class="text-[10px] text-slate-400 hover:text-rose-400 transition font-medium">
+                        ล้างประวัติทั้งหมด
+                    </button>
+                </div>
+                <div id="historyList" class="flex flex-col gap-2 max-h-[190px] overflow-y-auto pr-1">
+                    <!-- Dynamic List -->
+                    <p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติการจัดส่งที่สั่งพิมพ์</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal จัดการโปรไฟล์ผู้ส่ง -->
+    <div id="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-sky-400 flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>จัดการโปรไฟล์ข้อมูลผู้ส่ง</span>
+                </h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- รายการโปรไฟล์ที่มี -->
+            <div id="modalProfilesList" class="flex flex-col gap-2 max-h-[180px] overflow-y-auto mb-4 border-b border-slate-800 pb-3">
+                <!-- Profiles loop in JS -->
+            </div>
+
+            <!-- เพิ่มโปรไฟล์ใหม่ -->
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                <h4 class="text-xs font-bold text-slate-300 mb-2">เพิ่มข้อมูลผู้ส่งรายใหม่</h4>
+                <div class="flex flex-col gap-2.5">
+                    <input type="text" id="newProfileName" placeholder="ชื่อโปรไฟล์ เช่น (ศูนย์ซ่อมสาขา 1, ร้านหลัก)"
+                        class="w-full text-xs p-2.5 input-premium rounded-lg">
+                    <textarea id="newProfileDetail" rows="3" placeholder="ชื่อร้าน/บริษัท ที่อยู่ เบอร์โทร..."
+                        class="w-full text-xs p-2.5 input-premium rounded-lg"></textarea>
+                    <button type="button" onclick="addNewProfile()"
+                        class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition">
+                        เพิ่มโปรไฟล์ผู้ส่ง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Control Section -->
+    <script>
+        // โครงสร้างประวัติการพิมพ์
+        let printHistory = [];
+        // โครงสร้างโปรไฟล์ผู้ส่ง
+        let senderProfiles = [];
+        let activeProfileId = '';
+
+        // ทำงานเมื่อหน้าเว็บพร้อม
+        window.onload = function () {
+            // โหลดไอคอน Lucide
+            lucide.createIcons();
+            
+            // อัปเดตเวลามุมขวาบน
+            setInterval(updateTime, 1000);
+            updateTime();
+
+            // โหลดโปรไฟล์ผู้ส่ง
+            initSenderProfiles();
+
+            // โหลดประวัติการพิมพ์
+            initPrintHistory();
+
+            // โหลดการตั้งค่าขนาดกระดาษและเลย์เอาต์
+            loadSizingSettings();
+
+            // อัปเดตพรีวิวเริ่มแรก
+            updatePreview();
+        }
+
+        // อัปเดตเวลานาฬิกา
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            document.getElementById('currentTime').innerText = timeStr;
+        }
+
+        // ฟังก์ชันประมวลการกู้ข้อมูลเดิม หรือสร้างโปรไฟล์เริ่มต้น
+        function initSenderProfiles() {
+            const savedProfiles = localStorage.getItem('label_sender_profiles');
+            const legacySender = localStorage.getItem('label_sender'); // ตรวจสอบผู้ส่งแบบเดิม (v1.0)
+
+            if (savedProfiles) {
+                senderProfiles = JSON.parse(savedProfiles);
+            } else {
+                // หากพบคอนฟิกผู้ส่งแบบเก่า ให้นำมาโอนย้ายระบบอัตโนมัติ
+                let defaultDetail = legacySender || "ตัวอย่าง: ร้านแอนตี้กราวิตี้ ฮาร์ดแวร์\n123/45 ถนนนวมินทร์ แขวงคลองกุ่ม เขตบึงกุ่ม\nกรุงเทพฯ 10240 โทร. 02-123-4567";
+                senderProfiles = [
+                    {
+                        id: 'prof_' + Date.now(),
+                        name: 'ผู้ส่งค่าเริ่มต้น (สาขาหลัก)',
+                        detail: defaultDetail,
+                        isDefault: true
+                    }
+                ];
+                localStorage.setItem('label_sender_profiles', JSON.stringify(senderProfiles));
+                if (legacySender) {
+                    localStorage.removeItem('label_sender'); // ลบของเก่าออกเมื่ออัปเกรดสำเร็จ
+                }
+            }
+
+            // เลือกโปรไฟล์ Active
+            const defaultProf = senderProfiles.find(p => p.isDefault) || senderProfiles[0];
+            if (defaultProf) {
+                activeProfileId = defaultProf.id;
+                document.getElementById('inputSender').value = defaultProf.detail;
+            }
+
+            renderSenderProfilesDropdown();
+        }
+
+        // แสดงผลรายการโปรไฟล์ใน Select Dropdown
+        function renderSenderProfilesDropdown() {
+            const select = document.getElementById('senderProfileSelect');
+            select.innerHTML = '';
+            
+            senderProfiles.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.text = p.name + (p.isDefault ? ' (หลัก)' : '');
+                opt.selected = (p.id === activeProfileId);
+                select.appendChild(opt);
+            });
+        }
+
+        // เปลี่ยนโปรไฟล์ที่เลือก
+        function onSenderProfileChange() {
+            const select = document.getElementById('senderProfileSelect');
+            const selectedId = select.value;
+            const profile = senderProfiles.find(p => p.id === selectedId);
+            
+            if (profile) {
+                activeProfileId = selectedId;
+                document.getElementById('inputSender').value = profile.detail;
+                updatePreview();
+            }
+        }
+
+        // อัปเดตข้อมูลผู้ส่งปัจจุบันนี้กลับไปบันทึกในโปรไฟล์นั้น ๆ
+        function saveCurrentSenderAsProfile() {
+            const detail = document.getElementById('inputSender').value.trim();
+            if (!detail) {
+                alert('⚠️ กรุณากรอกข้อมูลผู้ส่งก่อนบันทึกครับ');
+                return;
+            }
+
+            const activeProfIndex = senderProfiles.findIndex(p => p.id === activeProfileId);
+            if (activeProfIndex !== -1) {
+                senderProfiles[activeProfIndex].detail = detail;
+                localStorage.setItem('label_sender_profiles', JSON.stringify(senderProfiles));
+                alert('💾 อัปเดตข้อมูลผู้ส่งของโปรไฟล์ "'+ senderProfiles[activeProfIndex].name +'" เรียบร้อยแล้วครับ!');
+                updatePreview();
+            }
+        }
+
+        // ฟังก์ชันลบตัวอักษร Smart Paste
+        function clearSmartPaste() {
+            document.getElementById('smartPasteInput').value = '';
+        }
+
+        // ฟังก์ชันวิเคราะห์และแยกแยะที่อยู่เมื่อผู้ใช้วางข้อความ
+        function handleSmartPaste() {
+            const rawText = document.getElementById('smartPasteInput').value;
+            if (!rawText.trim()) return;
+
+            const parsed = parseThaiAddress(rawText);
+
+            if (parsed) {
+                if (parsed.name) document.getElementById('inputRecName').value = parsed.name;
+                if (parsed.phone) document.getElementById('inputRecPhone').value = parsed.phone;
+                if (parsed.address) document.getElementById('inputRecAddress').value = parsed.address;
+                if (parsed.zipcode) document.getElementById('inputRecZip').value = parsed.zipcode;
+                
+                updatePreview();
+            }
+        }
+
+        // ฟังก์ชันแยกที่อยู่อัจฉริยะแบบ Regex สำหรับประเทศไทย
+        function parseThaiAddress(text) {
+            let temp = text.trim();
+            
+            // 1. แยกดึงรหัสไปรษณีย์ 5 หลัก
+            let zipcode = '';
+            const zipRegex = /(?:\b|[^0-9])(\d{5})(?:\b|[^0-9])/;
+            const zipMatch = temp.match(zipRegex);
+            if (zipMatch) {
+                zipcode = zipMatch[1];
+                temp = temp.replace(zipcode, ' ');
+            }
+
+            // 2. แยกดึงเบอร์โทรศัพท์ (รองรับรูปแบบ 0812345678, 081-234-5678, 021234567, 02-123-4567)
+            let phone = '';
+            const phoneRegex = /(0[23456789]\d{1}[-\s]?\d{3,4}[-\s]?\d{3,4}|02[-\s]?\d{3}[-\s]?\d{4})/g;
+            const phoneMatches = temp.match(phoneRegex);
+            if (phoneMatches && phoneMatches.length > 0) {
+                phone = phoneMatches[0];
+                temp = temp.replace(phone, ' ');
+            }
+
+            // จัดรูปแบบเบอร์โทรให้อ่านง่าย
+            let formattedPhone = phone.replace(/[-\s]/g, '').trim();
+            if (formattedPhone.length === 10) {
+                formattedPhone = formattedPhone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+            } else if (formattedPhone.length === 9) {
+                formattedPhone = formattedPhone.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
+            } else {
+                formattedPhone = phone.trim();
+            }
+
+            // ลบคำกำกับที่พบบ่อย เช่น "เบอร์โทร", "โทร.", "Tel:"
+            const labelsToRemove = /(?:เบอร์โทรศัพท์|เบอร์โทร|โทรศัพท์|โทร\.?|เบอร์\.?|T\.?|Tel\.?|Phone|Contact|ผู้รับ):?\s*/gi;
+            temp = temp.replace(labelsToRemove, ' ');
+
+            // ทำความสะอาดพื้นที่เว้นวรรค
+            temp = temp.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            let lines = temp.split('\n')
+                             .map(l => l.trim())
+                             .filter(l => l.length > 0);
+
+            let name = '';
+            let address = '';
+
+            if (lines.length > 0) {
+                // บรรทัดแรกมักจะเป็นชื่อผู้รับ ยกเว้นตรวจเจอคีย์เวิร์ดที่อยู่ด้านในบรรทัดแรกเลย
+                const addressKeywords = /(บ้านเลขที่|เลขที่|หมู่ที่|หมู่|ม\.|ซอย|ซ\.|ถนน|ถ\.|ตำบล|ต\.|แขวง|อำเภอ|อ\.|เขต|จังหวัด|จ\.|ตง\.|อภ\.|จว\.)/i;
+                
+                if (addressKeywords.test(lines[0]) && lines[0].length > 15) {
+                    const parts = lines[0].split(/\s+/);
+                    if (parts.length > 1) {
+                        name = parts[0] + ' ' + parts[1];
+                        address = lines[0].substring(name.length).trim();
+                    } else {
+                        name = parts[0];
+                        address = lines[0];
+                    }
+                    if (lines.length > 1) {
+                        address += ' ' + lines.slice(1).join(' ');
+                    }
+                } else {
+                    name = lines[0];
+                    address = lines.slice(1).join(' ');
+                }
+            }
+
+            // จัดการความสะอาดและจุดตกหล่นของข้อความที่อยู่
+            address = address.replace(/\s+/g, ' ').trim();
+            address = address.replace(/^[,.-\s]+/, '').replace(/[,.-\s]+$/, '').trim();
+
+            return {
+                name: name.trim(),
+                phone: formattedPhone,
+                address: address,
+                zipcode: zipcode.trim()
+            };
+        }
+
+        // ระบบประวัติการพิมพ์
+        function initPrintHistory() {
+            const savedHistory = localStorage.getItem('label_print_history');
+            if (savedHistory) {
+                printHistory = JSON.parse(savedHistory);
+            } else {
+                printHistory = [];
+            }
+            renderHistoryList();
+        }
+
+        // เพิ่มประวัติการพิมพ์ใหม่
+        function addHistoryItem(name, phone, address, zipcode, note) {
+            // หลีกเลี่ยงประวัติซ้ำกัน
+            const duplicateIndex = printHistory.findIndex(h => h.name === name && h.phone === phone && h.address === address);
+            if (duplicateIndex !== -1) {
+                printHistory.splice(duplicateIndex, 1); // เอาของเก่าออกเพื่อสลับมารายล่าสุด
+            }
+
+            printHistory.unshift({
+                id: 'hist_' + Date.now(),
+                name: name,
+                phone: phone,
+                address: address,
+                zipcode: zipcode,
+                note: note,
+                timestamp: Date.now()
+            });
+
+            // จำกัดสูงสุดที่ 8 รายการ
+            if (printHistory.length > 8) {
+                printHistory.pop();
+            }
+
+            localStorage.setItem('label_print_history', JSON.stringify(printHistory));
+            renderHistoryList();
+        }
+
+        // แสดงผลรายการประวัติ
+        function renderHistoryList() {
+            const listContainer = document.getElementById('historyList');
+            listContainer.innerHTML = '';
+
+            if (printHistory.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติการจัดส่งที่สั่งพิมพ์</p>`;
+                return;
+            }
+
+            printHistory.forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'glass-card p-2.5 rounded-xl flex justify-between items-center gap-2 text-left text-xs cursor-pointer hover:border-sky-500/40';
+                item.onclick = (e) => {
+                    // หากคลิกที่ปุ่มลบจะไม่ให้โหลดกลับคืน
+                    if (e.target.closest('.delete-btn')) return;
+                    loadHistoryItem(h);
+                };
+
+                const date = new Date(h.timestamp);
+                const timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' น.';
+
+                item.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center gap-2 mb-1">
+                            <span class="font-bold text-slate-200 truncate">${h.name}</span>
+                            <span class="text-[9px] text-slate-500 font-mono">${timeLabel}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 truncate">${h.phone} - ${h.address}</p>
+                    </div>
+                    <button type="button" class="delete-btn text-slate-500 hover:text-rose-400 p-1 transition" onclick="deleteHistoryItem('${h.id}', event)">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+
+            lucide.createIcons();
+        }
+
+        // นำประวัติเก่ากลับมากรอกในฟอร์ม
+        function loadHistoryItem(h) {
+            document.getElementById('inputRecName').value = h.name;
+            document.getElementById('inputRecPhone').value = h.phone;
+            document.getElementById('inputRecAddress').value = h.address;
+            document.getElementById('inputRecZip').value = h.zipcode;
+            document.getElementById('inputNote').value = h.note || '';
+            
+            // ล้างช่อง Smart Paste ด้วยเพื่อไม่ให้สับสน
+            clearSmartPaste();
+
+            updatePreview();
+        }
+
+        // ลบหนึ่งรายการประวัติ
+        function deleteHistoryItem(id, event) {
+            event.stopPropagation();
+            printHistory = printHistory.filter(h => h.id !== id);
+            localStorage.setItem('label_print_history', JSON.stringify(printHistory));
+            renderHistoryList();
+        }
+
+        // ล้างประวัติทั้งหมด
+        function clearHistory() {
+            if (confirm('คุณต้องการลบประวัติการพิมพ์ทั้งหมดใช่หรือไม่?')) {
+                printHistory = [];
+                localStorage.removeItem('label_print_history');
+                renderHistoryList();
+            }
+        }
+
+        // ฟังก์ชันสำหรับจัดเก็บการตั้งค่าขนาดลง LocalStorage
+        function saveSizingSettings() {
+            localStorage.setItem('label_print_method', document.getElementById('printMethod').value);
+            localStorage.setItem('label_paper_preset', document.getElementById('paperPreset').value);
+            localStorage.setItem('label_box_preset', document.getElementById('boxPreset').value);
+            localStorage.setItem('label_width', document.getElementById('labelWidth').value);
+            localStorage.setItem('label_height', document.getElementById('labelHeight').value);
+            localStorage.setItem('label_padding', document.getElementById('sliderPadding').value);
+            localStorage.setItem('label_scale', document.getElementById('sliderScale').value);
+            localStorage.setItem('label_show_cut_line', document.getElementById('chkShowCutLine').checked);
+        }
+
+        // ฟังก์ชันโหลดค่าการตั้งค่าจาก LocalStorage
+        function loadSizingSettings() {
+            const printMethod = localStorage.getItem('label_print_method') || 'thermal';
+            const paperPreset = localStorage.getItem('label_paper_preset') || 'a6';
+            const boxPreset = localStorage.getItem('label_box_preset') || '';
+            const width = localStorage.getItem('label_width') || '100';
+            const height = localStorage.getItem('label_height') || '150';
+            const padding = localStorage.getItem('label_padding') || '16';
+            const scale = localStorage.getItem('label_scale') || '100';
+            const showCutLine = localStorage.getItem('label_show_cut_line') === 'true';
+
+            document.getElementById('printMethod').value = printMethod;
+            document.getElementById('paperPreset').value = paperPreset;
+            document.getElementById('boxPreset').value = boxPreset;
+            document.getElementById('labelWidth').value = width;
+            document.getElementById('labelHeight').value = height;
+            document.getElementById('sliderPadding').value = padding;
+            document.getElementById('lblPaddingVal').innerText = padding + 'px';
+            document.getElementById('sliderScale').value = scale;
+            document.getElementById('lblScaleVal').innerText = scale + '%';
+            document.getElementById('chkShowCutLine').checked = showCutLine;
+
+            // ปรับแต่งการแสดงผลกล่องกำหนดขนาดเอง
+            toggleCustomDimensionBox();
+        }
+
+        function toggleCustomDimensionBox() {
+            const preset = document.getElementById('paperPreset').value;
+            const container = document.getElementById('customDimensionContainer');
+            const widthInput = document.getElementById('labelWidth');
+            const heightInput = document.getElementById('labelHeight');
+
+            if (preset === 'custom') {
+                widthInput.disabled = false;
+                heightInput.disabled = false;
+                container.classList.remove('opacity-60');
+            } else {
+                widthInput.disabled = true;
+                heightInput.disabled = true;
+                container.classList.add('opacity-60');
+            }
+        }
+
+        function onPrintMethodChange() {
+            const method = document.getElementById('printMethod').value;
+            
+            // ถ้าเลือกเป็น A4 ให้ติ๊กถูกเส้นประขอบตัดโดยอัตโนมัติ (แต่ผู้ใช้ยังปิดได้ถ้าต้องการ)
+            if (method.startsWith('a4-')) {
+                document.getElementById('chkShowCutLine').checked = true;
+            } else {
+                document.getElementById('chkShowCutLine').checked = false;
+            }
+            
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function onPaperPresetChange() {
+            const preset = document.getElementById('paperPreset').value;
+            const widthInput = document.getElementById('labelWidth');
+            const heightInput = document.getElementById('labelHeight');
+
+            if (preset !== 'custom') {
+                let w = 100, h = 150;
+                switch (preset) {
+                    case 'a6': w = 100; h = 150; break;
+                    case 'a4-quarter': w = 105; h = 148; break;
+                    case 'a5': w = 148; h = 210; break;
+                    case 'a7': w = 74; h = 105; break;
+                    case 'square100': w = 100; h = 100; break;
+                }
+                widthInput.value = w;
+                heightInput.value = h;
+            }
+
+            // ล้างค่า Box Preset เมื่อเลือกขนาดกระดาษตรงๆ
+            document.getElementById('boxPreset').value = '';
+
+            toggleCustomDimensionBox();
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function onBoxPresetChange() {
+            const box = document.getElementById('boxPreset').value;
+            if (!box) return;
+
+            const widthInput = document.getElementById('labelWidth');
+            const heightInput = document.getElementById('labelHeight');
+            const paperPresetSelect = document.getElementById('paperPreset');
+
+            let w = 100, h = 150;
+            let presetName = 'custom';
+
+            switch (box) {
+                case 'box-00':
+                    w = 75; h = 50; presetName = 'custom';
+                    break;
+                case 'box-0':
+                    w = 100; h = 80; presetName = 'custom';
+                    break;
+                case 'box-a':
+                    w = 100; h = 150; presetName = 'a6';
+                    break;
+                case 'box-b':
+                    w = 105; h = 148; presetName = 'a4-quarter';
+                    break;
+                case 'box-c':
+                    w = 105; h = 148; presetName = 'a4-quarter';
+                    break;
+                case 'box-d':
+                    w = 148; h = 210; presetName = 'a5';
+                    break;
+                case 'box-e':
+                    w = 148; h = 210; presetName = 'a5';
+                    break;
+            }
+
+            widthInput.value = w;
+            heightInput.value = h;
+            paperPresetSelect.value = presetName;
+
+            toggleCustomDimensionBox();
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function onCustomDimensionsInput() {
+            document.getElementById('paperPreset').value = 'custom';
+            document.getElementById('boxPreset').value = '';
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function changePadding(val) {
+            document.getElementById('lblPaddingVal').innerText = val + 'px';
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function changeScale(val) {
+            document.getElementById('lblScaleVal').innerText = val + '%';
+            saveSizingSettings();
+            updatePreview();
+        }
+
+        function updatePreviewContainerSize() {
+            const container = document.getElementById('printContainer');
+            const w = parseFloat(document.getElementById('labelWidth').value) || 100;
+            const h = parseFloat(document.getElementById('labelHeight').value) || 150;
+            
+            // กำหนดมิติสติกเกอร์จำลอง 1mm = 3.2px บนหน้าจอ
+            const scaleFactor = 3.2;
+            container.style.width = (w * scaleFactor) + 'px';
+            container.style.height = (h * scaleFactor) + 'px';
+            container.style.maxWidth = '100%';
+            
+            // อัปเดตตัวเลขแสดงขนาดด้านบนตัวแปรมิติแบบมิลลิเมตร
+            document.getElementById('dimensionLabel').innerText = `${w} x ${h} mm`;
+        }
+
+        function updateDynamicPrintStyles() {
+            const printMethod = document.getElementById('printMethod').value;
+            const widthMm = parseFloat(document.getElementById('labelWidth').value) || 100;
+            const heightMm = parseFloat(document.getElementById('labelHeight').value) || 150;
+            const paddingPx = document.getElementById('sliderPadding').value || '16';
+            const scaleFactor = (parseFloat(document.getElementById('sliderScale').value) || 100) / 100;
+            const showCutLine = document.getElementById('chkShowCutLine').checked;
+
+            let dynamicStyle = document.getElementById('dynamic-print-style');
+            if (!dynamicStyle) {
+                dynamicStyle = document.createElement('style');
+                dynamicStyle.id = 'dynamic-print-style';
+                document.head.appendChild(dynamicStyle);
+            }
+
+            let cssText = '';
+
+            // ปรับระยะขอบหน้าจอจำลอง
+            const printArea = document.getElementById('printArea');
+            printArea.style.padding = `${paddingPx}px`;
+            
+            // ปรับสเกลย่อย (Zoom/Scale) ของเนื้อหากระดาษ
+            printArea.style.zoom = scaleFactor;
+
+            // ควบคุมเส้นประไกด์ไลน์ขอบพิมพ์สำหรับตัด
+            if (showCutLine) {
+                printArea.classList.add('border', 'border-dashed', 'border-black');
+            } else {
+                printArea.classList.remove('border', 'border-dashed', 'border-black');
+            }
+
+            if (printMethod === 'thermal') {
+                cssText = `
+                    @media print {
+                        @page {
+                            size: ${widthMm}mm ${heightMm}mm;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            width: ${widthMm}mm !important;
+                            height: ${heightMm}mm !important;
+                            background: white !important;
+                        }
+                        #printContainer {
+                            width: ${widthMm}mm !important;
+                            height: ${heightMm}mm !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                        }
+                        #printArea {
+                            position: absolute !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: ${widthMm}mm !important;
+                            height: ${heightMm}mm !important;
+                            padding: ${paddingPx}px !important;
+                            zoom: ${scaleFactor} !important;
+                            border: none !important;
+                            box-shadow: none !important;
+                            background: white !important;
+                        }
+                    }
+                `;
+            } else if (printMethod === 'a4-topleft') {
+                cssText = `
+                    @media print {
+                        @page {
+                            size: A4;
+                            margin: 10mm;
+                        }
+                        body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            background: white !important;
+                        }
+                        #printContainer {
+                            width: auto !important;
+                            height: auto !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                        }
+                        #printArea {
+                            position: relative !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: ${widthMm}mm !important;
+                            height: ${heightMm}mm !important;
+                            padding: ${paddingPx}px !important;
+                            zoom: ${scaleFactor} !important;
+                            background: white !important;
+                            ${showCutLine ? 'border: 1px dashed #000000 !important;' : 'border: none !important;'}
+                            box-shadow: none !important;
+                            margin: 0 !important;
+                        }
+                    }
+                `;
+            } else if (printMethod === 'a4-center') {
+                cssText = `
+                    @media print {
+                        @page {
+                            size: A4;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            height: 100vh !important;
+                            width: 100vw !important;
+                            background: white !important;
+                        }
+                        #printContainer {
+                            width: auto !important;
+                            height: auto !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            background: white !important;
+                        }
+                        #printArea {
+                            position: relative !important;
+                            width: ${widthMm}mm !important;
+                            height: ${heightMm}mm !important;
+                            padding: ${paddingPx}px !important;
+                            zoom: ${scaleFactor} !important;
+                            background: white !important;
+                            ${showCutLine ? 'border: 1px dashed #000000 !important;' : 'border: none !important;'}
+                            box-shadow: none !important;
+                            margin: auto !important;
+                        }
+                    }
+                `;
+            }
+
+            dynamicStyle.innerHTML = cssText;
+        }
+
+        // ปรับขนาดฟอนต์ของฝั่งผู้ส่ง
+        function changeSenderFontSize(size) {
+            document.getElementById('viewSender').style.fontSize = size + 'px';
+            document.getElementById('lblSenderFontSizeVal').innerText = size + 'px';
+        }
+
+        // ปรับขนาดฟอนต์ของฝั่งผู้รับ
+        function changeRecFontSize(size) {
+            const base = parseInt(size);
+            document.getElementById('viewRecName').style.fontSize = (base + 2) + 'px';
+            document.getElementById('viewRecPhone').style.fontSize = base + 'px';
+            document.getElementById('viewRecAddress').style.fontSize = (base - 2) + 'px';
+            document.getElementById('lblRecFontSizeVal').innerText = size + 'px';
+        }
+
+        // ฟังก์ชันสั่งพิมพ์
+        function printLabel() {
+            const recName = document.getElementById('inputRecName').value.trim();
+            const recPhone = document.getElementById('inputRecPhone').value.trim();
+            const recAddress = document.getElementById('inputRecAddress').value.trim();
+            const recZip = document.getElementById('inputRecZip').value.trim();
+            const note = document.getElementById('inputNote').value.trim();
+
+            if (!recName || !recAddress) {
+                alert('⚠️ กรุณากรอกข้อมูล ชื่อ และ ที่อยู่ ของผู้รับพัสดุก่อนพิมพ์ครับ');
+                return;
+            }
+
+            // บันทึกลงในประวัติการพิมพ์
+            addHistoryItem(recName, recPhone, recAddress, recZip, note);
+
+            // คำสั่งพิมพ์ของเบราว์เซอร์
+            window.print();
+        }
+
+        // อัปเดตพรีวิวสดแบบเรียลไทม์
+        function updatePreview() {
+            const sender = document.getElementById('inputSender').value.trim() || "กรุณากรอกข้อมูลผู้ส่ง";
+            const recName = document.getElementById('inputRecName').value.trim() || "ชื่อ-นามสกุลผู้รับ";
+            const recPhone = document.getElementById('inputRecPhone').value.trim() || "เบอร์โทรศัพท์";
+            const recAddress = document.getElementById('inputRecAddress').value.trim() || "ที่อยู่จัดส่งสินค้า...";
+            const recZip = document.getElementById('inputRecZip').value.trim() || "XXXXX";
+            const note = document.getElementById('inputNote').value.trim() || "-";
+
+            // อัปเดตเท็กซ์ในเบราว์เซอร์
+            document.getElementById('viewSender').innerText = sender;
+            document.getElementById('viewRecName').innerText = recName;
+            document.getElementById('viewRecPhone').innerText = recPhone;
+            document.getElementById('viewRecAddress').innerText = recAddress;
+            document.getElementById('viewRecZip').innerText = recZip;
+            document.getElementById('viewNote').innerText = note;
+
+            // ปรับขนาดหน้าจอแสดงผลจำลองเเละสไตล์พิมพ์
+            updatePreviewContainerSize();
+            updateDynamicPrintStyles();
+
+            // บาร์โค้ด
+            try {
+                const showBarcode = document.getElementById('chkShowBarcode').checked;
+                const barcodeContainer = document.getElementById('barcodeContainer');
+                
+                if (showBarcode) {
+                    barcodeContainer.classList.remove('no-print');
+                    barcodeContainer.style.display = 'flex';
+                    
+                    const barcodeSource = document.getElementById('barcodeSource').value;
+                    let barcodeVal = '';
+                    
+                    if (barcodeSource === 'zip') {
+                        barcodeVal = recZip;
+                    } else {
+                        // นำข้อมูลหมายเหตุมาล้างค่า คัดเฉพาะตัวอังกฤษ ตัวเลข เครื่องหมาย เพื่อไม่ให้ CODE128 มีปัญหา
+                        barcodeVal = note.replace(/[^\x20-\x7E]/g, '').trim();
+                    }
+
+                    // ลิมิตความยาวและคัดกรองหากค่าว่าง
+                    barcodeVal = barcodeVal.substring(0, 22).trim();
+
+                    // ถ้าไม่มีค่าใช้ Zipcode ทดแทน
+                    if (!barcodeVal) {
+                        barcodeVal = recZip;
+                    }
+
+                    if (barcodeVal && barcodeVal !== 'XXXXX') {
+                        const widthMm = parseFloat(document.getElementById('labelWidth').value) || 100;
+                        let barcodeWidthSetting = 1.5;
+                        let barcodeHeightSetting = 38;
+                        let barcodeFontSizeSetting = 10;
+                        
+                        if (widthMm < 80) {
+                            barcodeWidthSetting = 1.0;
+                            barcodeHeightSetting = 24;
+                            barcodeFontSizeSetting = 8;
+                        } else if (widthMm < 100) {
+                            barcodeWidthSetting = 1.25;
+                            barcodeHeightSetting = 30;
+                            barcodeFontSizeSetting = 9;
+                        }
+
+                        JsBarcode("#barcodeCanvas", barcodeVal, {
+                            format: "CODE128",
+                            width: barcodeWidthSetting,
+                            height: barcodeHeightSetting,
+                            displayValue: true,
+                            fontSize: barcodeFontSizeSetting,
+                            margin: 4,
+                            background: "#ffffff",
+                            lineColor: "#000000"
+                        });
+                    } else {
+                        barcodeContainer.style.display = 'none';
+                        barcodeContainer.classList.add('no-print');
+                    }
+                } else {
+                    barcodeContainer.style.display = 'none';
+                    barcodeContainer.classList.add('no-print');
+                }
+            } catch (err) {
+                console.error("การสร้างบาร์โค้ดผิดพลาด:", err);
+            }
+        }
+
+        /* --- โซนฟังก์ชันจัดการ Modal โปรไฟล์ผู้ส่ง --- */
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.remove('hidden');
+            renderModalProfiles();
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        // วนลูปโปรไฟล์แสดงในหน้าต่างจัดการ
+        function renderModalProfiles() {
+            const list = document.getElementById('modalProfilesList');
+            list.innerHTML = '';
+
+            senderProfiles.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-col gap-1.5 relative';
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-xs ${p.isDefault ? 'text-sky-400' : 'text-slate-300'}">${p.name} ${p.isDefault ? '(หลัก)' : ''}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${!p.isDefault ? `
+                                <button onclick="setProfileDefault('${p.id}')" class="text-[10px] text-sky-400 hover:underline">ตั้งเป็นค่าหลัก</button>
+                                <span class="text-slate-700">|</span>
+                                <button onclick="deleteProfile('${p.id}')" class="text-[10px] text-rose-400 hover:underline">ลบ</button>
+                            ` : '<span class="text-[10px] text-slate-500 font-medium">โปรไฟล์หลักปัจจุบัน</span>'}
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 whitespace-pre-line leading-normal">${p.detail}</p>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // ตั้งค่าโปรไฟล์หลัก
+        function setProfileDefault(id) {
+            senderProfiles.forEach(p => {
+                p.isDefault = (p.id === id);
+            });
+            localStorage.setItem('label_sender_profiles', JSON.stringify(senderProfiles));
+            renderModalProfiles();
+            initSenderProfiles();
+        }
+
+        // ลบโปรไฟล์ผู้ส่ง
+        function deleteProfile(id) {
+            const profile = senderProfiles.find(p => p.id === id);
+            if (profile.isDefault) {
+                alert('⚠️ ไม่สามารถลบโปรไฟล์หลักได้ครับ กรุณาเปลี่ยนโปรไฟล์อื่นเป็นโปรไฟล์หลักก่อน');
+                return;
+            }
+
+            if (confirm(`คุณต้องการลบโปรไฟล์ "${profile.name}" ใช่หรือไม่?`)) {
+                senderProfiles = senderProfiles.filter(p => p.id !== id);
+                localStorage.setItem('label_sender_profiles', JSON.stringify(senderProfiles));
+                
+                // หากโปรไฟล์ที่ถูกลบกำลังถูกเลือกใช้อยู่ ให้รีเซ็ตกลับเป็นโปรไฟล์หลัก
+                if (activeProfileId === id) {
+                    const defaultProf = senderProfiles.find(p => p.isDefault) || senderProfiles[0];
+                    activeProfileId = defaultProf.id;
+                    document.getElementById('inputSender').value = defaultProf.detail;
+                }
+
+                renderModalProfiles();
+                initSenderProfiles();
+                updatePreview();
+            }
+        }
+
+        // เพิ่มโปรไฟล์ใหม่
+        function addNewProfile() {
+            const nameInput = document.getElementById('newProfileName');
+            const detailInput = document.getElementById('newProfileDetail');
+            
+            const name = nameInput.value.trim();
+            const detail = detailInput.value.trim();
+
+            if (!name || !detail) {
+                alert('⚠️ กรุณากรอกชื่อโปรไฟล์และที่อยู่ผู้ส่งให้ครบถ้วนครับ');
+                return;
+            }
+
+            const newProf = {
+                id: 'prof_' + Date.now(),
+                name: name,
+                detail: detail,
+                isDefault: false
+            };
+
+            senderProfiles.push(newProf);
+            localStorage.setItem('label_sender_profiles', JSON.stringify(senderProfiles));
+            
+            // ล้างค่าช่องอินพุต
+            nameInput.value = '';
+            detailInput.value = '';
+
+            renderModalProfiles();
+            initSenderProfiles();
+        }
+    </script>
+</body>
+
+</html>
