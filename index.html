@@ -104,6 +104,15 @@
                 color: #000000 !important;
             }
 
+            /* Fix specificity issue: force white text on dark/black badge backgrounds during printing */
+            #printArea .print-bg-black,
+            #printArea .print-bg-black * {
+                background-color: #000000 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
             main {
                 display: block !important;
                 padding: 0 !important;
@@ -164,6 +173,9 @@
     <header class="bg-slate-900/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-40 p-4 no-print shadow-lg">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
             <h1 class="text-xl font-bold flex items-center gap-3 tracking-wide">
+                <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-inner backdrop-blur-sm">
+                    <img src="Logo-New-TIGERSOFT.webp" alt="Tigersoft Logo" class="h-7 w-auto object-contain drop-shadow">
+                </div>
                 <span class="p-1.5 bg-gradient-to-tr from-sky-400 to-indigo-600 rounded-lg text-white">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                 </span>
@@ -411,10 +423,19 @@
                                         class="w-4 h-4 rounded text-sky-500 bg-slate-950 border-slate-700 focus:ring-0">
                                     <span class="text-xs font-medium text-slate-300">แสดงเส้นประสำหรับตัด (Cutting Guide)</span>
                                 </label>
+
+                                <label class="flex items-center gap-2.5 bg-slate-900/60 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                                    <input type="checkbox" id="chkShowStickerLogo" checked onchange="saveSizingSettings(); updatePreview();"
+                                        class="w-4 h-4 rounded text-sky-500 bg-slate-950 border-slate-700 focus:ring-0">
+                                    <span class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                                        <i data-lucide="image" class="w-3.5 h-3.5 text-sky-400"></i>
+                                        <span>แสดงโลโก้ Tigersoft บนใบปะหน้า</span>
+                                    </span>
+                                </label>
                             </div>
                         </div>
 
-                        <!-- แหล่งข้อมูลบาร์โค้ด & ตัวควบคุมปรับฟอนต์เดิม -->
+                        <!-- แหล่งข้อมูลบาร์โค้ด & ตัวควบคุมคำเตือน -->
                         <div class="flex flex-col gap-3">
                             <div class="flex flex-col gap-1.5">
                                 <label class="block text-xs font-medium text-slate-400">บาร์โค้ดแปลงจาก</label>
@@ -424,6 +445,38 @@
                                     <option value="note">แปลงจาก หมายเหตุ (ตัดเฉพาะอังกฤษ/ตัวเลข)</option>
                                 </select>
                             </div>
+
+                            <!-- ปุ่มเปิด/ปิดป้ายคำเตือน -->
+                            <label class="flex items-center gap-2.5 bg-slate-900/60 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-slate-700 transition mt-1">
+                                <input type="checkbox" id="chkShowWarning" onchange="toggleWarningOptions(); saveSizingSettings(); updatePreview();"
+                                    class="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-700 focus:ring-0">
+                                <span class="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span>แสดงป้ายคำเตือน (Warning Label)</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- กล่องเลือกรายละเอียดป้ายคำเตือน -->
+                    <div id="warningOptionsContainer" class="bg-amber-950/20 border border-amber-800/40 p-3 rounded-xl flex flex-col gap-2.5 hidden">
+                        <div>
+                            <label class="block text-[11px] font-medium text-amber-300 mb-1">เลือกประเภทป้ายคำเตือน</label>
+                            <select id="warningTypeSelect" onchange="onWarningTypeChange(); saveSizingSettings(); updatePreview();"
+                                class="w-full text-xs bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-amber-500">
+                                <option value="fragile">🍷 ระวังของแตก (FRAGILE - HANDLE WITH CARE)</option>
+                                <option value="do-not-throw">📦 ห้ามโยน / ระวังกระแทก (HANDLE WITH CARE)</option>
+                                <option value="keep-dry">☂️ ระวังเปียกน้ำ / ห้ามตากฝน (KEEP DRY)</option>
+                                <option value="heat">🔥 ห้ามโดนความร้อน / วางกลางแดด (KEEP AWAY FROM HEAT)</option>
+                                <option value="this-side-up">⬆️ ตั้งขึ้นเท่านั้น / ห้ามวางนอน (THIS SIDE UP)</option>
+                                <option value="liquid">🧪 สินค้ามีของเหลว / ระวังรั่วซึม (LIQUID / CAUTION)</option>
+                                <option value="custom">✍️ กำหนดข้อความคำเตือนเอง (Custom Warning Text)</option>
+                            </select>
+                        </div>
+                        <div id="customWarningInputContainer" class="hidden">
+                            <label class="block text-[10px] text-amber-400 mb-1">ระบุข้อความคำเตือนแบบกำหนดเอง</label>
+                            <input type="text" id="inputCustomWarning" placeholder="เช่น ระวังเครื่องซ่อมตก QC" oninput="saveSizingSettings(); updatePreview();"
+                                class="w-full text-xs p-2 input-premium rounded-lg">
                         </div>
                     </div>
 
@@ -479,14 +532,31 @@
                         <!-- เส้นปะพรีวิว (แสดงเฉพาะในเบราว์เซอร์สำหรับความสวยงาม ไม่พิมพ์ออกมา) -->
                         <div class="absolute inset-x-0 top-0 h-px bg-slate-200 border-t border-dashed no-print"></div>
 
-                        <!-- ส่วนหัว: ผู้ส่ง -->
+                        <!-- ส่วนหัว: ผู้ส่ง + โลโก้ Tigersoft -->
                         <div class="border-b-[1.5px] border-black pb-2 text-[11px] leading-tight print-border-black flex flex-col">
-                            <div class="flex items-center mb-1">
-                                <span class="font-extrabold bg-black text-white px-1.5 py-0.5 rounded-[3px] text-[9px] uppercase tracking-wider print-bg-black mr-1.5">ผู้ส่ง Sender</span>
+                            <div class="flex justify-between items-center mb-1">
+                                <div class="flex items-center">
+                                    <span class="font-extrabold bg-black text-white px-1.5 py-0.5 rounded-[3px] text-[9px] uppercase tracking-wider print-bg-black mr-1.5">ผู้ส่ง Sender</span>
+                                </div>
+                                <div id="stickerLogoContainer" class="flex items-center bg-black px-2.5 py-1 rounded-[4px] print-bg-black shadow-sm">
+                                    <img src="Logo-New-TIGERSOFT.webp" alt="Tigersoft" class="h-5.5 w-auto object-contain max-w-[110px]">
+                                </div>
                             </div>
                             <div id="viewSender" class="whitespace-pre-line mt-0.5 font-semibold text-slate-700 leading-normal" style="font-size: 11px;">
                                 กรุณากรอกข้อมูลผู้ส่ง
                             </div>
+                        </div>
+
+                        <!-- ป้ายคำเตือนพัสดุ (Warning Label Banner) -->
+                        <div id="viewWarningBox" class="my-1.5 p-1.5 border-2 border-black rounded-[4px] flex items-center justify-between bg-black text-white print-bg-black hidden">
+                            <div class="flex items-center gap-2">
+                                <span id="viewWarningIcon" class="text-base font-bold leading-none">🍷</span>
+                                <div class="flex flex-col leading-tight">
+                                    <span id="viewWarningTitleText" class="font-black text-xs uppercase tracking-wide text-white">ระวังของแตก</span>
+                                    <span id="viewWarningSubText" class="text-[8px] font-bold tracking-widest text-slate-200 uppercase">FRAGILE - HANDLE WITH CARE</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-extrabold border border-white px-1.5 py-0.5 rounded uppercase tracking-wider text-white">CAUTION</span>
                         </div>
 
                         <!-- ส่วนกลาง: ผู้รับ -->
@@ -922,6 +992,10 @@
             localStorage.setItem('label_padding', document.getElementById('sliderPadding').value);
             localStorage.setItem('label_scale', document.getElementById('sliderScale').value);
             localStorage.setItem('label_show_cut_line', document.getElementById('chkShowCutLine').checked);
+            localStorage.setItem('label_show_sticker_logo', document.getElementById('chkShowStickerLogo').checked);
+            localStorage.setItem('label_show_warning', document.getElementById('chkShowWarning').checked);
+            localStorage.setItem('label_warning_type', document.getElementById('warningTypeSelect').value);
+            localStorage.setItem('label_warning_custom', document.getElementById('inputCustomWarning').value);
         }
 
         // ฟังก์ชันโหลดค่าการตั้งค่าจาก LocalStorage
@@ -934,6 +1008,10 @@
             const padding = localStorage.getItem('label_padding') || '16';
             const scale = localStorage.getItem('label_scale') || '100';
             const showCutLine = localStorage.getItem('label_show_cut_line') === 'true';
+            const showStickerLogo = localStorage.getItem('label_show_sticker_logo') !== 'false';
+            const showWarning = localStorage.getItem('label_show_warning') === 'true';
+            const warningType = localStorage.getItem('label_warning_type') || 'fragile';
+            const warningCustom = localStorage.getItem('label_warning_custom') || '';
 
             document.getElementById('printMethod').value = printMethod;
             document.getElementById('paperPreset').value = paperPreset;
@@ -945,9 +1023,34 @@
             document.getElementById('sliderScale').value = scale;
             document.getElementById('lblScaleVal').innerText = scale + '%';
             document.getElementById('chkShowCutLine').checked = showCutLine;
+            document.getElementById('chkShowStickerLogo').checked = showStickerLogo;
+            document.getElementById('chkShowWarning').checked = showWarning;
+            document.getElementById('warningTypeSelect').value = warningType;
+            document.getElementById('inputCustomWarning').value = warningCustom;
 
-            // ปรับแต่งการแสดงผลกล่องกำหนดขนาดเอง
+            toggleWarningOptions();
             toggleCustomDimensionBox();
+        }
+
+        function toggleWarningOptions() {
+            const show = document.getElementById('chkShowWarning').checked;
+            const container = document.getElementById('warningOptionsContainer');
+            if (show) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+            onWarningTypeChange();
+        }
+
+        function onWarningTypeChange() {
+            const type = document.getElementById('warningTypeSelect').value;
+            const customContainer = document.getElementById('customWarningInputContainer');
+            if (type === 'custom') {
+                customContainer.classList.remove('hidden');
+            } else {
+                customContainer.classList.add('hidden');
+            }
         }
 
         function toggleCustomDimensionBox() {
@@ -1279,6 +1382,72 @@
             document.getElementById('viewRecAddress').innerText = recAddress;
             document.getElementById('viewRecZip').innerText = recZip;
             document.getElementById('viewNote').innerText = note;
+
+            // อัปเดตโลโก้ Tigersoft บนใบปะหน้า
+            const showStickerLogo = document.getElementById('chkShowStickerLogo').checked;
+            const stickerLogoContainer = document.getElementById('stickerLogoContainer');
+            if (showStickerLogo) {
+                stickerLogoContainer.style.display = 'flex';
+            } else {
+                stickerLogoContainer.style.display = 'none';
+            }
+
+            // อัปเดตป้ายคำเตือน
+            const showWarning = document.getElementById('chkShowWarning').checked;
+            const warningBox = document.getElementById('viewWarningBox');
+            if (showWarning) {
+                warningBox.classList.remove('hidden');
+                const warningType = document.getElementById('warningTypeSelect').value;
+                const customText = document.getElementById('inputCustomWarning').value.trim();
+
+                let icon = "🍷";
+                let title = "ระวังของแตก";
+                let sub = "FRAGILE - HANDLE WITH CARE";
+
+                switch (warningType) {
+                    case 'fragile':
+                        icon = "🍷";
+                        title = "ระวังของแตก";
+                        sub = "FRAGILE - HANDLE WITH CARE";
+                        break;
+                    case 'do-not-throw':
+                        icon = "📦";
+                        title = "ห้ามโยน / ระวังกระแทก";
+                        sub = "HANDLE WITH CARE - DO NOT THROW";
+                        break;
+                    case 'keep-dry':
+                        icon = "☂️";
+                        title = "ระวังเปียกน้ำ / ห้ามตากฝน";
+                        sub = "KEEP DRY - PROTECT FROM MOISTURE";
+                        break;
+                    case 'heat':
+                        icon = "🔥";
+                        title = "ห้ามโดนความร้อน / วางกลางแดด";
+                        sub = "KEEP AWAY FROM HEAT";
+                        break;
+                    case 'this-side-up':
+                        icon = "⬆️";
+                        title = "ตั้งขึ้นเท่านั้น / ห้ามวางนอน";
+                        sub = "THIS SIDE UP";
+                        break;
+                    case 'liquid':
+                        icon = "🧪";
+                        title = "ระวัง! สินค้ามีของเหลว";
+                        sub = "LIQUID INSIDE - CAUTION";
+                        break;
+                    case 'custom':
+                        icon = "⚠️";
+                        title = customText || "คำเตือนพิเศษ";
+                        sub = "WARNING / SPECIAL ATTENTION";
+                        break;
+                }
+
+                document.getElementById('viewWarningIcon').innerText = icon;
+                document.getElementById('viewWarningTitleText').innerText = title;
+                document.getElementById('viewWarningSubText').innerText = sub;
+            } else {
+                warningBox.classList.add('hidden');
+            }
 
             // ปรับขนาดหน้าจอแสดงผลจำลองเเละสไตล์พิมพ์
             updatePreviewContainerSize();
